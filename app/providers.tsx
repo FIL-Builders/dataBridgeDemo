@@ -7,7 +7,8 @@ import {
 } from '@rainbow-me/rainbowkit';
 import { WagmiProvider } from 'wagmi';
 import {
-    avalancheFuji
+    avalancheFuji,
+    filecoinCalibration
 } from 'wagmi/chains';
 import {
     QueryClientProvider,
@@ -19,7 +20,7 @@ const queryClient = new QueryClient();
 const config = getDefaultConfig({
     appName: 'OnRamp',
     projectId: 'WALLETCONNECT_PROJECT_ID',
-    chains: [avalancheFuji],
+    chains: [avalancheFuji, filecoinCalibration],
     ssr: true, // If your dApp uses server side rendering (SSR)
 });
 

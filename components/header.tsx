@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from 'next/link'
 import { WalletConnect } from "./walletConnect";
+import { NavbarWalletComponent } from "./navbarWalletComponent";
 
 const Header = () => {
 
@@ -31,7 +32,7 @@ const Header = () => {
       </div>
       <div className="fixed right-6">
         <div className="flex flex-row gap-8 items-center">
-          {/* Wallet Details */}
+          <NavbarWalletComponent />
         </div>
       </div>
     </div >

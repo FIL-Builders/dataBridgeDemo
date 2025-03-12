@@ -14,6 +14,21 @@ export default function OnRamp() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // const uploadedFiles = [
+  //   {
+  //     "name": "FileOne.png",
+  //     "size": "921 MB",
+  //   },
+  //   {
+  //     "name": "FileTwo.png",
+  //     "size": "921 MB",
+  //   },
+  //   {
+  //     "name": "FileThree.png",
+  //     "size": "921 MB",
+  //   }
+  // ]
+
   const handleFileChange = (selectedFile: File) => {
     // Reset states
     setError(null);
@@ -134,13 +149,13 @@ export default function OnRamp() {
     <>
       <Header />
       <div className="w-full min-h-screen bg-blue-600 flex justify-center items-center p-2">
-        <div className="flex flex-col gap-8 items-center">
-
+        <div className="flex flex-row gap-8 items-center">
+          {/* UPLAOD SECTION */}
           <div className="min-h-screen flex items-center justify-center text-center p-4">
             <div className="bg-white rounded-xl shadow-lg w-full max-w-md overflow-hidden">
               <div className="p-6 px-20">
                 <h1 className="text-2xl font-bold text-gray-800 mb-1 py-4">Store Data On Filecoin</h1>
-              
+
 
                 {error && (
                   <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
@@ -263,6 +278,27 @@ export default function OnRamp() {
               )}
             </div>
           </div>
+          {/* LIST OF FILES */}
+          {/* <div>
+            <div className="space-y-4">
+              <div className="flex items-start gap-4 p-4 rounded-lg bg-gray-50">
+                <div className="flex-shrink-0">
+                  {getFileIcon()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-gray-900 truncate">
+                    {file?.name}
+                  </h3>
+                  <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
+                    <span>{formatFileSize(file?.size)}</span>
+                    <span>•</span>
+                    <span>{file?.type || "Unknown type"}</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div> */}
         </div>
 
       </div>
