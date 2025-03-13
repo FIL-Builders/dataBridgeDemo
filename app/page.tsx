@@ -1,6 +1,5 @@
 import Header from "../components/header";
 import Footer from "../components/footer";
-import Link from 'next/link'
 import { WalletConnect } from "@/components/walletConnect";
 export default function Home() {
 
@@ -16,7 +15,7 @@ export default function Home() {
             Cross-Chain Data Storage on Filecoin{" "}
           </h1>
           <p className="text-xl mb-5">
-            Effortlessly bridge your data to Filecoin
+            Effortlessly bridge your data to Filecoin from Avalanche
           </p>
           <WalletConnect />
         </div>

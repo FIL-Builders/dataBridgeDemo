@@ -4,6 +4,13 @@ import Footer from "@components/footer";
 import Header from "@components/header";
 import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
 import { Upload, File, Image, FileText, Check, X, UploadCloud } from 'lucide-react';
+import { uploadToIPFS } from "./pinata";
+import {generateCID, generatePiece } from "@/utils/dataPrep";
+import { ethers } from "ethers";
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import {ONRAMP_CONTRACT_ADDRESS, ONRAMP_CONTRACT_ABI} from "@components/contractDetails"
+
+const WETH_ADDRESS = "0xb44cc5FB8CfEdE63ce1758CE0CDe0958A7702a16";
 
 export default function OnRamp() {
 
@@ -13,6 +20,16 @@ export default function OnRamp() {
   const [textContent, setTextContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const PINATA_CONFIGS = JSON.stringify({
+    cidVersion: 1,
+  });
+  const PINATA_CLOUD_ROOT = "https://gateway.pinata.cloud/ipfs/";
+
+  const { data: hash, isPending, writeContract } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash,
+  });
 
   // const uploadedFiles = [
   //   {
@@ -110,11 +127,56 @@ export default function OnRamp() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (file) {
-      // Contract Integration
+      //Upload data to IPFS buffer using pinata
+      const data = new FormData();
+      data.append("file", file);
+      data.append("pinataOptions", PINATA_CONFIGS);
+      const response = await uploadToIPFS(data);
+      const fileIPFSHash = response?.ipfsHash;
+      const ipfsURL = `${PINATA_CLOUD_ROOT}${fileIPFSHash}`;
+
+      //Preparing CID and piece info
+      const cid = await generateCID(file);
+      console.log("cid is ", cid.toString());
+      const piece = await generatePiece(file);
+      const pieceCid = piece.link.toString();
+      console.log("piece is ", piece.link.bytes);
+      console.log("piece CID is ", pieceCid);
+
+      const pieceCidBytes = ethers.hexlify(piece.link.bytes);
+      console.log("piece CID in bytes:", pieceCidBytes);
+
+      const pieceSize = piece.padding;
+
+      //Making offer struct
+      const offer = {
+        commP: pieceCidBytes as `0x${string}`,
+        size: BigInt(pieceSize),
+        cid: cid.toString(),
+        location: ipfsURL,
+        amount: BigInt(0),
+        token: WETH_ADDRESS as `0x${string}`,
+      };
+      console.log("offer is ",offer);
+
+      try {
+        writeContract({
+          address: ONRAMP_CONTRACT_ADDRESS,
+          abi: ONRAMP_CONTRACT_ABI,
+          functionName: "offerData",
+          args: [offer],
+        });
+      } catch (error) {
+        console.error("Error sending transaction:", error);
+      }
+
+    }else {
+      setError("No file is uploaded.");
     }
   };
+
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -154,7 +216,7 @@ export default function OnRamp() {
           <div className="min-h-screen flex items-center justify-center text-center p-4">
             <div className="bg-white rounded-xl shadow-lg w-full max-w-md overflow-hidden">
               <div className="p-6 px-20">
-                <h1 className="text-2xl font-bold text-gray-800 mb-1 py-4">Store Data On Filecoin</h1>
+                <h1 className="text-2xl font-bold text-gray-800 mb-1 py-4">Store Data to Filecoin</h1>
 
 
                 {error && (
@@ -268,6 +330,8 @@ export default function OnRamp() {
                 )}
               </div>
 
+              
+
               {file && (
                 <div className="bg-blue-50 px-6 py-3 border-t border-blue-100">
                   <div className="flex items-center gap-2">
@@ -276,10 +340,21 @@ export default function OnRamp() {
                   </div>
                 </div>
               )}
+
+              {file && (
+                <div className="bg-blue-50 px-6 py-3 border-t border-blue-100">
+                  <div className="flex items-center gap-2">
+                    {isPending && <p className="items-left text-sm text-blue-800">Transaction pending...</p>}
+                    {isConfirming && <p className="items-left text-sm text-blue-800">Confirming transaction...</p>}
+                    {isConfirmed && hash && <p className="items-left text-sm text-blue-800">Transaction hash: {hash}</p>}
+                  </div>
+                </div>
+              )}
+                    
             </div>
           </div>
           {/* LIST OF FILES */}
-          {/* <div>
+          {/* { <div>
             <div className="space-y-4">
               <div className="flex items-start gap-4 p-4 rounded-lg bg-gray-50">
                 <div className="flex-shrink-0">
@@ -296,9 +371,8 @@ export default function OnRamp() {
                   </div>
                 </div>
               </div>
-
             </div>
-          </div> */}
+          </div> } */}
         </div>
 
       </div>
