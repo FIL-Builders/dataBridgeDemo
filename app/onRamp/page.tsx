@@ -1,14 +1,14 @@
 "use client"
 
-import Footer from "@components/footer";
 import Header from "@components/header";
 import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
 import { Upload, File, Image, FileText, Check, X, UploadCloud } from 'lucide-react';
 import { uploadToIPFS } from "./pinata";
-import {generateCID, generatePiece } from "@/utils/dataPrep";
+import { generateCID, generatePiece } from "@/utils/dataPrep";
 import { ethers } from "ethers";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import {ONRAMP_CONTRACT_ADDRESS, ONRAMP_CONTRACT_ABI} from "@components/contractDetails"
+import { ONRAMP_CONTRACT_ADDRESS, ONRAMP_CONTRACT_ABI } from "@components/contractDetails"
+import { FiUpload, FiFile, FiUsers, FiHardDrive, FiDatabase } from 'react-icons/fi';
 
 const WETH_ADDRESS = "0xb44cc5FB8CfEdE63ce1758CE0CDe0958A7702a16";
 
@@ -159,7 +159,7 @@ export default function OnRamp() {
         amount: BigInt(0),
         token: WETH_ADDRESS as `0x${string}`,
       };
-      console.log("offer is ",offer);
+      console.log("offer is ", offer);
 
       try {
         writeContract({
@@ -172,7 +172,7 @@ export default function OnRamp() {
         console.error("Error sending transaction:", error);
       }
 
-    }else {
+    } else {
       setError("No file is uploaded.");
     }
   };
@@ -210,24 +210,91 @@ export default function OnRamp() {
   return (
     <>
       <Header />
-      <div className="w-full min-h-screen bg-blue-600 flex justify-center items-center p-2">
-        <div className="flex flex-row gap-8 items-center">
-          {/* UPLAOD SECTION */}
-          <div className="min-h-screen flex items-center justify-center text-center p-4">
-            <div className="bg-white rounded-xl shadow-lg w-full max-w-md overflow-hidden">
-              <div className="p-6 px-20">
-                <h1 className="text-2xl font-bold text-gray-800 mb-1 py-4">Store Data to Filecoin</h1>
 
+      <div className="pt-16 bg-blue-600 h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
+          {/* Stats Section */}
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                    <FiFile className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Total Files</dt>
+                      <dd className="text-3xl font-semibold text-gray-900">5</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
+                    <FiUsers className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Parameter Name</dt>
+                      <dd className="text-3xl font-semibold text-gray-900">12</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 bg-red-500 rounded-md p-3">
+                    <FiHardDrive className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Storage Used</dt>
+                      <dd className="text-3xl font-semibold text-gray-900">4.2 GB</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                    <FiDatabase className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Parameter Name</dt>
+                      <dd className="text-3xl font-semibold text-gray-900">10 GB</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Two Column Layout */}
+          <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Upload Section */}
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Upload Files</h3>
                 {error && (
                   <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
                     {error}
                   </div>
                 )}
-
                 {!file ? (
                   <div
-                    className={`border-2 border-dashed rounded-xl p-8 transition-all ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-400'
+                    className={`flex justify-center border-2 border-dashed rounded-xl h-96 transition-all ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-400'
                       }`}
                     onDragEnter={handleDragEnter}
                     onDragLeave={handleDragLeave}
@@ -328,55 +395,58 @@ export default function OnRamp() {
                     </div>
                   </div>
                 )}
+                {/* {file && (
+                  <div className="bg-blue-50 px-6 py-3 border-t border-blue-100">
+                    <div className="flex items-center gap-2">
+                      {isPending && <p className="items-left text-sm text-blue-800">Transaction pending...</p>}
+                      {isConfirming && <p className="items-left text-sm text-blue-800">Confirming transaction...</p>}
+                      {isConfirmed && hash && <p className="items-left text-sm text-blue-800">Transaction hash: {hash}</p>}
+                    </div>
+                  </div>
+                )} */}
               </div>
+            </div>
 
-              
+            {/* File List */}
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg font-medium leading-6 text-gray-900">Recent Uploads</h3>
+                <div className="mt-5">
+                  <ul className="divide-y divide-gray-200">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <li key={index} className="py-4 flex">
+                        <div className="bg-gray-100 rounded-md p-2">
+                          <FiFile className="h-6 w-6 text-gray-500" />
+                        </div>
+                        <div className="ml-3 flex flex-col flex-grow">
+                          <span className="text-sm font-medium text-gray-900">
+                            {['project_report.pdf', 'image_assets.zip', 'presentation.pptx', 'contract.docx', 'financial_data.xlsx'][index]}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {['2.5 MB', '8.2 MB', '4.7 MB', '1.2 MB', '3.8 MB'][index]} • Uploaded {['2 hours', '1 day', '3 days', '5 days', '1 week'][index]} ago
+                          </span>
+                        </div>
+                        <div className="ml-4 flex-shrink-0 flex items-center space-x-2">
+                          <button type="button" className="text-sm font-medium text-gray-500 hover:text-gray-700">
+                            Action Button
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
 
-              {file && (
-                <div className="bg-blue-50 px-6 py-3 border-t border-blue-100">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <p className="text-sm text-blue-800">File ready to be stored on Filecoin</p>
+                  <div className="mt-4 text-center">
+                    <a href="#" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                      View all files →
+                    </a>
                   </div>
                 </div>
-              )}
-
-              {file && (
-                <div className="bg-blue-50 px-6 py-3 border-t border-blue-100">
-                  <div className="flex items-center gap-2">
-                    {isPending && <p className="items-left text-sm text-blue-800">Transaction pending...</p>}
-                    {isConfirming && <p className="items-left text-sm text-blue-800">Confirming transaction...</p>}
-                    {isConfirmed && hash && <p className="items-left text-sm text-blue-800">Transaction hash: {hash}</p>}
-                  </div>
-                </div>
-              )}
-                    
+              </div>
             </div>
           </div>
-          {/* LIST OF FILES */}
-          {/* { <div>
-            <div className="space-y-4">
-              <div className="flex items-start gap-4 p-4 rounded-lg bg-gray-50">
-                <div className="flex-shrink-0">
-                  {getFileIcon()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-gray-900 truncate">
-                    {file?.name}
-                  </h3>
-                  <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
-                    <span>{formatFileSize(file?.size)}</span>
-                    <span>•</span>
-                    <span>{file?.type || "Unknown type"}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div> } */}
         </div>
-
       </div>
-      <Footer />
+
     </>
   )
 
