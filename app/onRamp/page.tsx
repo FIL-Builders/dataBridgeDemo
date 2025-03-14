@@ -4,11 +4,11 @@ import Header from "@components/header";
 import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
 import { Upload, File, Image, FileText, Check, X, UploadCloud } from 'lucide-react';
 import { uploadToIPFS } from "./pinata";
-import { generateCID, generatePiece } from "@/utils/dataPrep";
+import { generateCID, generateCommp, generateCAR} from "@/utils/dataPrep";
 import { ethers } from "ethers";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { ONRAMP_CONTRACT_ADDRESS, ONRAMP_CONTRACT_ABI } from "@components/contractDetails"
-import { FiUpload, FiFile, FiUsers, FiHardDrive, FiDatabase } from 'react-icons/fi';
+import { FiFile, FiUsers, FiHardDrive, FiDatabase } from 'react-icons/fi';
 
 const WETH_ADDRESS = "0xb44cc5FB8CfEdE63ce1758CE0CDe0958A7702a16";
 
@@ -118,6 +118,7 @@ export default function OnRamp() {
     setLoading(true)
     if (file) {
       //Upload data to IPFS buffer using pinata
+      //Todo: this is not correct. Need to upload CAR for Filecoin aggregation
       const data = new FormData();
       data.append("file", file);
       data.append("pinataOptions", PINATA_CONFIGS);
@@ -129,15 +130,18 @@ export default function OnRamp() {
       //Preparing CID and piece info
       const cid = await generateCID(file);
       console.log("cid is ", cid.toString());
-      const piece = await generatePiece(file);
-      const pieceCid = piece.link.toString();
-      console.log("piece is ", piece.link.bytes);
+      const commP = await generateCommp(file);
+      const pieceCid = commP.link.toString();
       console.log("piece CID is ", pieceCid);
+      commP.toInfo()
 
-      const pieceCidBytes = ethers.hexlify(piece.link.bytes);
+      const pieceCidBytes = ethers.hexlify(commP.link.bytes);
       console.log("piece CID in bytes:", pieceCidBytes);
 
-      const pieceSize = piece.padding;
+      const pieceSize = commP.size;
+      console.log(`Padded Piece Size: ${commP.size} bytes`);
+
+      await generateCAR(file);
 
       //Making offer struct
       const offer = {
