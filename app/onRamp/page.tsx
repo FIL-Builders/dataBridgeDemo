@@ -19,6 +19,8 @@ export default function OnRamp() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [textContent, setTextContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const PINATA_CONFIGS = JSON.stringify({
@@ -30,21 +32,6 @@ export default function OnRamp() {
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
   });
-
-  // const uploadedFiles = [
-  //   {
-  //     "name": "FileOne.png",
-  //     "size": "921 MB",
-  //   },
-  //   {
-  //     "name": "FileTwo.png",
-  //     "size": "921 MB",
-  //   },
-  //   {
-  //     "name": "FileThree.png",
-  //     "size": "921 MB",
-  //   }
-  // ]
 
   const handleFileChange = (selectedFile: File) => {
     // Reset states
@@ -128,11 +115,13 @@ export default function OnRamp() {
   };
 
   const handleUpload = async () => {
+    setLoading(true)
     if (file) {
       //Upload data to IPFS buffer using pinata
       const data = new FormData();
       data.append("file", file);
       data.append("pinataOptions", PINATA_CONFIGS);
+      console.log("Uploading")
       const response = await uploadToIPFS(data);
       const fileIPFSHash = response?.ipfsHash;
       const ipfsURL = `${PINATA_CLOUD_ROOT}${fileIPFSHash}`;
@@ -168,15 +157,17 @@ export default function OnRamp() {
           functionName: "offerData",
           args: [offer],
         });
+        setLoading(false)
       } catch (error) {
         console.error("Error sending transaction:", error);
+        setLoading(false)
       }
 
     } else {
       setError("No file is uploaded.");
     }
-  };
 
+  };
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -205,7 +196,6 @@ export default function OnRamp() {
       return <File className="w-8 h-8 text-blue-500" />;
     }
   };
-
 
   return (
     <>
@@ -292,118 +282,168 @@ export default function OnRamp() {
                     {error}
                   </div>
                 )}
-                {!file ? (
-                  <div
-                    className={`flex justify-center border-2 border-dashed rounded-xl h-96 transition-all ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-400'
-                      }`}
-                    onDragEnter={handleDragEnter}
-                    onDragLeave={handleDragLeave}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <div className="flex flex-col items-center justify-center gap-3 cursor-pointer">
-                      <div className="p-3 bg-blue-50 rounded-full">
-                        <UploadCloud className="w-8 h-8 text-blue-500" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm font-medium text-gray-700">
-                          <span className="text-blue-500">Click to upload</span> or drag and drop
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Supports all file types
-                        </p>
-                      </div>
-                    </div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      onChange={handleInputChange}
-                      className="hidden"
-                    />
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-4 p-4 rounded-lg bg-gray-50">
-                      <div className="flex-shrink-0">
-                        {getFileIcon()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-gray-900 truncate">
-                          {file.name}
-                        </h3>
-                        <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
-                          <span>{formatFileSize(file.size)}</span>
-                          <span>•</span>
-                          <span>{file.type || "Unknown type"}</span>
-                        </div>
-                      </div>
-                      <div>
-                        <button
-                          onClick={handleRemoveFile}
-                          className="p-1 rounded-full hover:bg-gray-200 transition-colors"
-                          aria-label="Remove file"
-                        >
-                          <X className="w-5 h-5 text-gray-500" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* File Preview */}
-                    <div className="preview-container">
-                      {previewUrl && (
-                        <div className="rounded-lg overflow-hidden border border-gray-200">
-                          <img
-                            src={previewUrl}
-                            alt="File preview"
-                            className="w-full h-auto object-contain max-h-64"
-                          />
-                        </div>
-                      )}
-
-                      {textContent && (
-                        <div className="rounded-lg border border-gray-200 overflow-hidden">
-                          <pre className="p-4 bg-gray-50 text-sm text-gray-800 overflow-x-auto max-h-64">
-                            {textContent}
-                          </pre>
-                        </div>
-                      )}
-
-                      {!previewUrl && !textContent && (
-                        <div className="rounded-lg border border-gray-200 p-8 flex flex-col items-center justify-center">
-                          {getFileIcon()}
-                          <p className="mt-2 text-sm text-gray-500">No preview available</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-3">
-                      <button
-                        onClick={handleRemoveFile}
-                        className="flex-1 py-2 px-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
-                      >
-                        Reset
-                      </button>
-                      <button
-                        onClick={handleUpload}
-                        className="flex-1 py-2 px-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                      >
-                        <Check className="w-4 h-4" />
-                        Upload File
-                      </button>
-                    </div>
-                  </div>
-                )}
-                {/* {file && (
-                  <div className="bg-blue-50 px-6 py-3 border-t border-blue-100">
-                    <div className="flex items-center gap-2">
+                {loading || isPending || isConfirming || isConfirmed ? (
+                  <>
+                    <div className="flex flex-row gap-2 justify-center items-center">
+                      {loading && <>
+                        <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:.7s]"></div>
+                        <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:.3s]"></div>
+                        <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:.7s]"></div>
+                      </>}
                       {isPending && <p className="items-left text-sm text-blue-800">Transaction pending...</p>}
                       {isConfirming && <p className="items-left text-sm text-blue-800">Confirming transaction...</p>}
-                      {isConfirmed && hash && <p className="items-left text-sm text-blue-800">Transaction hash: {hash}</p>}
+                      {/* {isConfirmed && hash && <p className="items-left text-sm text-blue-800">Transaction hash: {hash}</p>} */}
+                      {isConfirmed && hash && <div className="flex justify-center items-center flex-col">
+                        <img className="w-64 mb-16" src="https://cdn.vectorstock.com/i/500p/15/05/green-tick-checkmark-icon-vector-22691505.jpg" />
+                        <div className="flex flex-col gap-2 w-full text-[10px] sm:text-xs z-50">
+                          <div
+                            className="succsess-alert cursor-default flex items-center justify-between w-full h-12 sm:h-14 rounded-lg bg-[#232531] px-[10px]"
+                          >
+                            <div className="flex gap-2">
+                              <div className="text-[#2b9875] bg-white/5 backdrop-blur-xl p-1 rounded-lg">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke-width="1.5"
+                                  stroke="currentColor"
+                                  className="w-6 h-6"
+                                >
+                                  <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="m4.5 12.75 6 6 9-13.5"
+                                  ></path>
+                                </svg>
+                              </div>
+                              <div>
+                                <p className="text-white">Transaction hash</p>
+                                <p className="text-gray-500">{hash}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>}
                     </div>
-                  </div>
-                )} */}
+                  </>
+                ) : (
+                  <>
+                    {!file ? (
+                      <div
+                        className={`flex justify-center border-2 border-dashed rounded-xl h-96 transition-all ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-400'
+                          }`}
+                        onDragEnter={handleDragEnter}
+                        onDragLeave={handleDragLeave}
+                        onDragOver={handleDragOver}
+                        onDrop={handleDrop}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <div className="flex flex-col items-center justify-center gap-3 cursor-pointer">
+                          <div className="p-3 bg-blue-50 rounded-full">
+                            <UploadCloud className="w-8 h-8 text-blue-500" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-gray-700">
+                              <span className="text-blue-500">Click to upload</span> or drag and drop
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Supports all file types
+                            </p>
+                          </div>
+                        </div>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          onChange={handleInputChange}
+                          className="hidden"
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-4 p-4 rounded-lg bg-gray-50">
+                          <div className="flex-shrink-0">
+                            {getFileIcon()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-gray-900 truncate">
+                              {file.name}
+                            </h3>
+                            <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
+                              <span>{formatFileSize(file.size)}</span>
+                              <span>•</span>
+                              <span>{file.type || "Unknown type"}</span>
+                            </div>
+                          </div>
+                          <div>
+                            <button
+                              onClick={handleRemoveFile}
+                              className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                              aria-label="Remove file"
+                            >
+                              <X className="w-5 h-5 text-gray-500" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* File Preview */}
+                        <div className="preview-container">
+                          {previewUrl && (
+                            <div className="rounded-lg overflow-hidden border border-gray-200">
+                              <img
+                                src={previewUrl}
+                                alt="File preview"
+                                className="w-full h-auto object-contain max-h-64"
+                              />
+                            </div>
+                          )}
+
+                          {textContent && (
+                            <div className="rounded-lg border border-gray-200 overflow-hidden">
+                              <pre className="p-4 bg-gray-50 text-sm text-gray-800 overflow-x-auto max-h-64">
+                                {textContent}
+                              </pre>
+                            </div>
+                          )}
+
+                          {!previewUrl && !textContent && (
+                            <div className="rounded-lg border border-gray-200 p-8 flex flex-col items-center justify-center">
+                              {getFileIcon()}
+                              <p className="mt-2 text-sm text-gray-500">No preview available</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3">
+                          <button
+                            onClick={handleRemoveFile}
+                            className="flex-1 py-2 px-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                          >
+                            Reset
+                          </button>
+                          <button
+                            onClick={handleUpload}
+                            className="flex-1 py-2 px-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                          >
+                            <Check className="w-4 h-4" />
+                            Upload File
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* {file && (
+                    <div className="bg-blue-50 px-6 py-3 border-t border-blue-100">
+                      <div className="flex items-center gap-2">
+                        {isPending && <p className="items-left text-sm text-blue-800">Transaction pending...</p>}
+                        {isConfirming && <p className="items-left text-sm text-blue-800">Confirming transaction...</p>}
+                        {isConfirmed && hash && <p className="items-left text-sm text-blue-800">Transaction hash: {hash}</p>}
+                      </div>
+                    </div>
+                  )} */}
               </div>
             </div>
 
