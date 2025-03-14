@@ -4,7 +4,7 @@ import Header from "@components/header";
 import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
 import { Upload, File, Image, FileText, Check, X, UploadCloud } from 'lucide-react';
 import { uploadToIPFS } from "./pinata";
-import { generateCID, generatePiece } from "@/utils/dataPrep";
+import { generateCID, generatePiece, generateCommP } from "@/utils/dataPrep";
 import { ethers } from "ethers";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { ONRAMP_CONTRACT_ADDRESS, ONRAMP_CONTRACT_ABI } from "@components/contractDetails"
@@ -129,15 +129,15 @@ export default function OnRamp() {
       //Preparing CID and piece info
       const cid = await generateCID(file);
       console.log("cid is ", cid.toString());
-      const piece = await generatePiece(file);
-      const pieceCid = piece.link.toString();
-      console.log("piece is ", piece.link.bytes);
+      const piece = await generateCommP(file);
+      const pieceCid = piece.link().toString();
+      console.log("piece is ", piece.link().bytes);
       console.log("piece CID is ", pieceCid);
 
-      const pieceCidBytes = ethers.hexlify(piece.link.bytes);
+      const pieceCidBytes = ethers.hexlify(piece.link().bytes);
       console.log("piece CID in bytes:", pieceCidBytes);
 
-      const pieceSize = piece.padding;
+      const pieceSize = piece.paddedSize;
 
       //Making offer struct
       const offer = {

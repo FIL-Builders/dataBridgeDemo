@@ -1,7 +1,8 @@
 import { CID } from "multiformats/cid";
 import { base32 } from 'multiformats/bases/base32';
 import { importer } from 'ipfs-unixfs-importer';
-import { Piece } from "@web3-storage/data-segment";
+import { Piece, CommP } from "@web3-storage/data-segment";
+
 
 // Generate a CID using sha256
 export async function generateCID(file: File): Promise<CID> {
@@ -43,8 +44,15 @@ export async function generateCID(file: File): Promise<CID> {
     }
   }
 
- export async function generatePiece(file: File) {
+export async function generatePiece(file: File) {
     const bytes = new Uint8Array(await file.arrayBuffer());
     const piece = Piece.fromPayload(bytes);
     return piece;
   }
+
+
+export async function generateCommP(file: File) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const commP = await CommP.build(bytes);
+  return commP;
+}
