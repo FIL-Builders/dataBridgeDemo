@@ -1,19 +1,21 @@
-"use client"
+'use client';
 
-import Header from "@components/header";
-import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
-import { Upload, File, Image, FileText, Check, X, UploadCloud } from 'lucide-react';
-import { uploadToIPFS } from "./pinata";
-import { generateCID, generatePiece } from "@/utils/dataPrep";
-import { ethers } from "ethers";
-import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { ONRAMP_CONTRACT_ADDRESS, ONRAMP_CONTRACT_ABI } from "@components/contractDetails"
-import { FiUpload, FiFile, FiUsers, FiHardDrive, FiDatabase } from 'react-icons/fi';
+import React, { ChangeEvent, DragEvent, useRef, useState } from 'react';
+import { FiDatabase, FiFile, FiHardDrive, FiUpload, FiUsers } from 'react-icons/fi';
 
-const WETH_ADDRESS = "0xb44cc5FB8CfEdE63ce1758CE0CDe0958A7702a16";
+import { ONRAMP_CONTRACT_ABI, ONRAMP_CONTRACT_ADDRESS } from '@components/contractDetails';
+import Header from '@components/header';
+import { ethers } from 'ethers';
+import { Check, File, FileText, Image, Upload, UploadCloud, X } from 'lucide-react';
+import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+
+import { generateCID, generatePiece } from '@/utils/dataPrep';
+
+import { uploadToIPFS } from './pinata';
+
+const WETH_ADDRESS = '0xb44cc5FB8CfEdE63ce1758CE0CDe0958A7702a16';
 
 export default function OnRamp() {
-
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export default function OnRamp() {
   const PINATA_CONFIGS = JSON.stringify({
     cidVersion: 1,
   });
-  const PINATA_CLOUD_ROOT = "https://gateway.pinata.cloud/ipfs/";
+  const PINATA_CLOUD_ROOT = 'https://gateway.pinata.cloud/ipfs/';
 
   const { data: hash, isPending, writeContract } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
@@ -115,27 +117,27 @@ export default function OnRamp() {
   };
 
   const handleUpload = async () => {
-    setLoading(true)
+    setLoading(true);
     if (file) {
       //Upload data to IPFS buffer using pinata
       const data = new FormData();
-      data.append("file", file);
-      data.append("pinataOptions", PINATA_CONFIGS);
-      console.log("Uploading")
+      data.append('file', file);
+      data.append('pinataOptions', PINATA_CONFIGS);
+      console.log('Uploading');
       const response = await uploadToIPFS(data);
       const fileIPFSHash = response?.ipfsHash;
       const ipfsURL = `${PINATA_CLOUD_ROOT}${fileIPFSHash}`;
 
       //Preparing CID and piece info
       const cid = await generateCID(file);
-      console.log("cid is ", cid.toString());
+      console.log('cid is ', cid.toString());
       const piece = await generatePiece(file);
       const pieceCid = piece.link.toString();
-      console.log("piece is ", piece.link.bytes);
-      console.log("piece CID is ", pieceCid);
+      console.log('piece is ', piece.link.bytes);
+      console.log('piece CID is ', pieceCid);
 
       const pieceCidBytes = ethers.hexlify(piece.link.bytes);
-      console.log("piece CID in bytes:", pieceCidBytes);
+      console.log('piece CID in bytes:', pieceCidBytes);
 
       const pieceSize = piece.padding;
 
@@ -148,25 +150,23 @@ export default function OnRamp() {
         amount: BigInt(0),
         token: WETH_ADDRESS as `0x${string}`,
       };
-      console.log("offer is ", offer);
+      console.log('offer is ', offer);
 
       try {
         writeContract({
           address: ONRAMP_CONTRACT_ADDRESS,
           abi: ONRAMP_CONTRACT_ABI,
-          functionName: "offerData",
+          functionName: 'offerData',
           args: [offer],
         });
-        setLoading(false)
+        setLoading(false);
       } catch (error) {
-        console.error("Error sending transaction:", error);
-        setLoading(false)
+        console.error('Error sending transaction:', error);
+        setLoading(false);
       }
-
     } else {
-      setError("No file is uploaded.");
+      setError('No file is uploaded.');
     }
-
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -203,7 +203,6 @@ export default function OnRamp() {
 
       <div className="pt-16 bg-blue-600 h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
           {/* Stats Section */}
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <div className="bg-white overflow-hidden shadow rounded-lg">
@@ -285,54 +284,67 @@ export default function OnRamp() {
                 {loading || isPending || isConfirming || isConfirmed ? (
                   <>
                     <div className="flex flex-row gap-2 justify-center items-center">
-                      {loading && <>
-                        <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:.7s]"></div>
-                        <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:.3s]"></div>
-                        <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:.7s]"></div>
-                      </>}
-                      {isPending && <p className="items-left text-sm text-blue-800">Transaction pending...</p>}
-                      {isConfirming && <p className="items-left text-sm text-blue-800">Confirming transaction...</p>}
+                      {loading && (
+                        <>
+                          <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:.7s]"></div>
+                          <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:.3s]"></div>
+                          <div className="w-4 h-4 rounded-full bg-blue-700 animate-bounce [animation-delay:.7s]"></div>
+                        </>
+                      )}
+                      {isPending && (
+                        <p className="items-left text-sm text-blue-800">Transaction pending...</p>
+                      )}
+                      {isConfirming && (
+                        <p className="items-left text-sm text-blue-800">
+                          Confirming transaction...
+                        </p>
+                      )}
                       {/* {isConfirmed && hash && <p className="items-left text-sm text-blue-800">Transaction hash: {hash}</p>} */}
-                      {isConfirmed && hash && <div className="flex justify-center items-center flex-col">
-                        <img className="w-64 mb-16" src="https://cdn.vectorstock.com/i/500p/15/05/green-tick-checkmark-icon-vector-22691505.jpg" />
-                        <div className="flex flex-col gap-2 w-full text-[10px] sm:text-xs z-50">
-                          <div
-                            className="succsess-alert cursor-default flex items-center justify-between w-full h-12 sm:h-14 rounded-lg bg-[#232531] px-[10px]"
-                          >
-                            <div className="flex gap-2">
-                              <div className="text-[#2b9875] bg-white/5 backdrop-blur-xl p-1 rounded-lg">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke-width="1.5"
-                                  stroke="currentColor"
-                                  className="w-6 h-6"
-                                >
-                                  <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="m4.5 12.75 6 6 9-13.5"
-                                  ></path>
-                                </svg>
-                              </div>
-                              <div>
-                                <p className="text-white">Transaction hash</p>
-                                <p className="text-gray-500">{hash}</p>
+                      {isConfirmed && hash && (
+                        <div className="flex justify-center items-center flex-col">
+                          <img
+                            className="w-64 mb-16"
+                            src="https://cdn.vectorstock.com/i/500p/15/05/green-tick-checkmark-icon-vector-22691505.jpg"
+                          />
+                          <div className="flex flex-col gap-2 w-full text-[10px] sm:text-xs z-50">
+                            <div className="succsess-alert cursor-default flex items-center justify-between w-full h-12 sm:h-14 rounded-lg bg-[#232531] px-[10px]">
+                              <div className="flex gap-2">
+                                <div className="text-[#2b9875] bg-white/5 backdrop-blur-xl p-1 rounded-lg">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="1.5"
+                                    stroke="currentColor"
+                                    className="w-6 h-6"
+                                  >
+                                    <path
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      d="m4.5 12.75 6 6 9-13.5"
+                                    ></path>
+                                  </svg>
+                                </div>
+                                <div>
+                                  <p className="text-white">Transaction hash</p>
+                                  <p className="text-gray-500">{hash}</p>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-
-                      </div>}
+                      )}
                     </div>
                   </>
                 ) : (
                   <>
                     {!file ? (
                       <div
-                        className={`flex justify-center border-2 border-dashed rounded-xl h-96 transition-all ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-400'
-                          }`}
+                        className={`flex justify-center border-2 border-dashed rounded-xl h-96 transition-all ${
+                          isDragging
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-200 hover:border-blue-400'
+                        }`}
                         onDragEnter={handleDragEnter}
                         onDragLeave={handleDragLeave}
                         onDragOver={handleDragOver}
@@ -345,11 +357,10 @@ export default function OnRamp() {
                           </div>
                           <div className="text-center">
                             <p className="text-sm font-medium text-gray-700">
-                              <span className="text-blue-500">Click to upload</span> or drag and drop
+                              <span className="text-blue-500">Click to upload</span> or drag and
+                              drop
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              Supports all file types
-                            </p>
+                            <p className="text-xs text-gray-500 mt-1">Supports all file types</p>
                           </div>
                         </div>
                         <input
@@ -362,17 +373,13 @@ export default function OnRamp() {
                     ) : (
                       <div className="space-y-4">
                         <div className="flex items-start gap-4 p-4 rounded-lg bg-gray-50">
-                          <div className="flex-shrink-0">
-                            {getFileIcon()}
-                          </div>
+                          <div className="flex-shrink-0">{getFileIcon()}</div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-gray-900 truncate">
-                              {file.name}
-                            </h3>
+                            <h3 className="font-medium text-gray-900 truncate">{file.name}</h3>
                             <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
                               <span>{formatFileSize(file.size)}</span>
                               <span>•</span>
-                              <span>{file.type || "Unknown type"}</span>
+                              <span>{file.type || 'Unknown type'}</span>
                             </div>
                           </div>
                           <div>
@@ -460,14 +467,26 @@ export default function OnRamp() {
                         </div>
                         <div className="ml-3 flex flex-col flex-grow">
                           <span className="text-sm font-medium text-gray-900">
-                            {['project_report.pdf', 'image_assets.zip', 'presentation.pptx', 'contract.docx', 'financial_data.xlsx'][index]}
+                            {
+                              [
+                                'project_report.pdf',
+                                'image_assets.zip',
+                                'presentation.pptx',
+                                'contract.docx',
+                                'financial_data.xlsx',
+                              ][index]
+                            }
                           </span>
                           <span className="text-sm text-gray-500">
-                            {['2.5 MB', '8.2 MB', '4.7 MB', '1.2 MB', '3.8 MB'][index]} • Uploaded {['2 hours', '1 day', '3 days', '5 days', '1 week'][index]} ago
+                            {['2.5 MB', '8.2 MB', '4.7 MB', '1.2 MB', '3.8 MB'][index]} • Uploaded{' '}
+                            {['2 hours', '1 day', '3 days', '5 days', '1 week'][index]} ago
                           </span>
                         </div>
                         <div className="ml-4 flex-shrink-0 flex items-center space-x-2">
-                          <button type="button" className="text-sm font-medium text-gray-500 hover:text-gray-700">
+                          <button
+                            type="button"
+                            className="text-sm font-medium text-gray-500 hover:text-gray-700"
+                          >
                             Action Button
                           </button>
                         </div>
@@ -476,7 +495,10 @@ export default function OnRamp() {
                   </ul>
 
                   <div className="mt-4 text-center">
-                    <a href="#" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                    <a
+                      href="#"
+                      className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                    >
                       View all files →
                     </a>
                   </div>
@@ -486,8 +508,6 @@ export default function OnRamp() {
           </div>
         </div>
       </div>
-
     </>
-  )
-
+  );
 }
