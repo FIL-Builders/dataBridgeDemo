@@ -53,7 +53,7 @@ export default function CreateCarFileUploader() {
       let rootCID = null;
       console.log("Starting import...");
       for await (const entry of importer(fileEntry, blockstore, {
-        wrapWithDirectory: false,
+        wrapWithDirectory: true,
       })) {
         console.log("Imported entry CID:", entry.cid.toString());
         const bytes = await blockstore.get(entry.cid);
