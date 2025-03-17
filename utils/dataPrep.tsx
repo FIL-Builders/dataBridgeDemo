@@ -48,7 +48,8 @@ export async function generateCID(file: File): Promise<CID> {
   // commp should be generated from CAR format
  export async function generateCommp(file: File) {
     const bytes = new Uint8Array(await file.arrayBuffer());
-    const piece = Piece.fromPayload(bytes);
+    //Using the Piece Info because it returns legacy coding for CID
+    const piece = Piece.fromPayload(bytes).toInfo();
     return piece;
   }
 

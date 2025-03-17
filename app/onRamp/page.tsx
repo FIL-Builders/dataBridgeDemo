@@ -133,7 +133,6 @@ export default function OnRamp() {
       const commP = await generateCommp(file);
       const pieceCid = commP.link.toString();
       console.log("piece CID is ", pieceCid);
-      commP.toInfo()
 
       const pieceCidBytes = ethers.hexlify(commP.link.bytes);
       console.log("piece CID in bytes:", pieceCidBytes);
@@ -141,8 +140,7 @@ export default function OnRamp() {
       const pieceSize = commP.size;
       console.log(`Padded Piece Size: ${commP.size} bytes`);
 
-      await generateCAR(file);
-
+      // await generateCAR(file);
       //Making offer struct
       const offer = {
         commP: pieceCidBytes as `0x${string}`,
