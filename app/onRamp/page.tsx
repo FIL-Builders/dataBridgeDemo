@@ -1,14 +1,15 @@
 "use client"
 
 import Header from "@components/header";
+import StatsSection from '@/components/onRamp/statsSection';
+import FileList from '@/components/onRamp/fileList';
 import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
 import { Upload, File, Image, FileText, Check, X, UploadCloud } from 'lucide-react';
 import { uploadToIPFS } from "./pinata";
-import { generateCID, generatePiece } from "@/utils/dataPrep";
+import { generateCID, generateCommp} from "@/utils/dataPrep";
 import { ethers } from "ethers";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { ONRAMP_CONTRACT_ADDRESS, ONRAMP_CONTRACT_ABI } from "@components/contractDetails"
-import { FiUpload, FiFile, FiUsers, FiHardDrive, FiDatabase } from 'react-icons/fi';
+import { ONRAMP_CONTRACT_ADDRESS, ONRAMP_CONTRACT_ABI } from "@components/contractDetails";
 
 const WETH_ADDRESS = "0xb44cc5FB8CfEdE63ce1758CE0CDe0958A7702a16";
 
@@ -118,6 +119,7 @@ export default function OnRamp() {
     setLoading(true)
     if (file) {
       //Upload data to IPFS buffer using pinata
+      //Todo: this is not correct. Need to upload CAR for Filecoin aggregation
       const data = new FormData();
       data.append("file", file);
       data.append("pinataOptions", PINATA_CONFIGS);
@@ -129,26 +131,21 @@ export default function OnRamp() {
       //Preparing CID and piece info
       const cid = await generateCID(file);
       console.log("cid is ", cid.toString());
-      const piece = await generatePiece(file);
-      const pieceCid = piece.link.toString();
-      console.log("piece is ", piece.link.bytes);
+
+      const commP = await generateCommp(file);
+      const pieceCid = commP.link.toString();
       console.log("piece CID is ", pieceCid);
-
-      const pieceCidBytes = ethers.hexlify(piece.link.bytes);
-      console.log("piece CID in bytes:", pieceCidBytes);
-
-      const pieceSize = piece.padding;
 
       //Making offer struct
       const offer = {
-        commP: pieceCidBytes as `0x${string}`,
-        size: BigInt(pieceSize),
+        commP: ethers.hexlify(commP.link.bytes) as `0x${string}`,
+        size: BigInt(commP.size),
         cid: cid.toString(),
         location: ipfsURL,
         amount: BigInt(0),
         token: WETH_ADDRESS as `0x${string}`,
       };
-      console.log("offer is ", offer);
+      console.log("offer: ", offer);
 
       try {
         writeContract({
@@ -205,71 +202,7 @@ export default function OnRamp() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Stats Section */}
-          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-indigo-500 rounded-md p-3">
-                    <FiFile className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Total Files</dt>
-                      <dd className="text-3xl font-semibold text-gray-900">5</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
-                    <FiUsers className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Parameter Name</dt>
-                      <dd className="text-3xl font-semibold text-gray-900">12</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-red-500 rounded-md p-3">
-                    <FiHardDrive className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Storage Used</dt>
-                      <dd className="text-3xl font-semibold text-gray-900">4.2 GB</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-yellow-500 rounded-md p-3">
-                    <FiDatabase className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Parameter Name</dt>
-                      <dd className="text-3xl font-semibold text-gray-900">10 GB</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <StatsSection />
 
           {/* Two Column Layout */}
           <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -292,7 +225,6 @@ export default function OnRamp() {
                       </>}
                       {isPending && <p className="items-left text-sm text-blue-800">Transaction pending...</p>}
                       {isConfirming && <p className="items-left text-sm text-blue-800">Confirming transaction...</p>}
-                      {/* {isConfirmed && hash && <p className="items-left text-sm text-blue-800">Transaction hash: {hash}</p>} */}
                       {isConfirmed && hash && <div className="flex justify-center items-center flex-col">
                         <img className="w-64 mb-16" src="https://cdn.vectorstock.com/i/500p/15/05/green-tick-checkmark-icon-vector-22691505.jpg" />
                         <div className="flex flex-col gap-2 w-full text-[10px] sm:text-xs z-50">
@@ -323,8 +255,16 @@ export default function OnRamp() {
                             </div>
                           </div>
                         </div>
-
-                      </div>}
+                        <div>
+                          <button
+                              onClick={() => window.location.reload()}
+                              className="flex-1 py-2 px-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                            >
+                              Go Back
+                          </button>
+                        </div>
+                      </div>
+                      }
                     </div>
                   </>
                 ) : (
@@ -434,55 +374,11 @@ export default function OnRamp() {
                     )}
                   </>
                 )}
-
-                {/* {file && (
-                    <div className="bg-blue-50 px-6 py-3 border-t border-blue-100">
-                      <div className="flex items-center gap-2">
-                        {isPending && <p className="items-left text-sm text-blue-800">Transaction pending...</p>}
-                        {isConfirming && <p className="items-left text-sm text-blue-800">Confirming transaction...</p>}
-                        {isConfirmed && hash && <p className="items-left text-sm text-blue-800">Transaction hash: {hash}</p>}
-                      </div>
-                    </div>
-                  )} */}
               </div>
             </div>
 
             {/* File List */}
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg font-medium leading-6 text-gray-900">Recent Uploads</h3>
-                <div className="mt-5">
-                  <ul className="divide-y divide-gray-200">
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <li key={index} className="py-4 flex">
-                        <div className="bg-gray-100 rounded-md p-2">
-                          <FiFile className="h-6 w-6 text-gray-500" />
-                        </div>
-                        <div className="ml-3 flex flex-col flex-grow">
-                          <span className="text-sm font-medium text-gray-900">
-                            {['project_report.pdf', 'image_assets.zip', 'presentation.pptx', 'contract.docx', 'financial_data.xlsx'][index]}
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            {['2.5 MB', '8.2 MB', '4.7 MB', '1.2 MB', '3.8 MB'][index]} • Uploaded {['2 hours', '1 day', '3 days', '5 days', '1 week'][index]} ago
-                          </span>
-                        </div>
-                        <div className="ml-4 flex-shrink-0 flex items-center space-x-2">
-                          <button type="button" className="text-sm font-medium text-gray-500 hover:text-gray-700">
-                            Action Button
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div className="mt-4 text-center">
-                    <a href="#" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                      View all files →
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <FileList />
           </div>
         </div>
       </div>
