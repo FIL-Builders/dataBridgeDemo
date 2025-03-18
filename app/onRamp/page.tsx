@@ -1,27 +1,20 @@
 'use client';
 
-import Header from "@components/header";
 import StatsSection from '@/components/onRamp/statsSection';
 import FileList from '@/components/onRamp/fileList';
-import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
-import { Upload, File, Image, FileText, Check, X, UploadCloud } from 'lucide-react';
-import { uploadToIPFS } from "./pinata";
-import { generateCID, generateCommp} from "@/utils/dataPrep";
-import { ethers } from "ethers";
-import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { ONRAMP_CONTRACT_ADDRESS, ONRAMP_CONTRACT_ABI } from "@components/contractDetails";
-
-import { ONRAMP_CONTRACT_ABI, ONRAMP_CONTRACT_ADDRESS } from '@components/contractDetails';
 import Header from '@components/header';
+import { generateCID, generateCommp } from '@/utils/dataPrep';
+import { ONRAMP_CONTRACT_ABI, ONRAMP_CONTRACT_ADDRESS } from '@components/contractDetails';
+
+import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
+
 import { ethers } from 'ethers';
 import { Check, File, FileText, Image, Upload, UploadCloud, X } from 'lucide-react';
 import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 
-import { generateCID, generatePiece } from '@/utils/dataPrep';
-
 import { uploadToIPFS } from './pinata';
 
-const WETH_ADDRESS = '0xb44cc5FB8CfEdE63ce1758CE0CDe0958A7702a16';
+const PAYMENT_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_PAYMENT_TOKEN_ADDRESS;
 
 export default function OnRamp() {
   const [file, setFile] = useState<File | null>(null);
@@ -152,7 +145,7 @@ export default function OnRamp() {
         cid: cid.toString(),
         location: ipfsURL,
         amount: BigInt(0),
-        token: WETH_ADDRESS as `0x${string}`,
+        token: PAYMENT_TOKEN_ADDRESS as `0x${string}`,
       };
       console.log("offer: ", offer);
 
