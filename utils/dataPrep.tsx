@@ -43,8 +43,10 @@ export async function generateCID(file: File): Promise<CID> {
   }
 }
 
-export async function generatePiece(file: File) {
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const piece = Piece.fromPayload(bytes);
-  return piece;
-}
+  //Generate Commp/Piece from a giving file
+ export async function generateCommp(file: File) {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    //Using the Piece Info because it returns legacy coding for CID
+    const piece = Piece.fromPayload(bytes).toInfo();
+    return piece;
+  }
