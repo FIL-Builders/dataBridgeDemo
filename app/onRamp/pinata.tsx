@@ -1,4 +1,4 @@
-"use server";
+'use server';
 
 export type PinataResponse = {
   ipfsHash: string;
@@ -10,16 +10,16 @@ export type PinataResponse = {
 export async function uploadToIPFS(data: FormData): Promise<PinataResponse> {
   try {
     const apiKey = process.env.NEXT_PUBLIC_PINATA_API_KEY;
-    console.log("PINATA API KEY:", apiKey)
-    const res = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
-      method: "POST",
+    console.log('PINATA API KEY:', apiKey);
+    const res = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },
       body: data,
     });
 
-    console.log(res)
+    console.log(res);
 
     if (!res.ok) {
       throw new Error(`Failed to upload to IPFS: ${res.statusText}`);
@@ -34,7 +34,7 @@ export async function uploadToIPFS(data: FormData): Promise<PinataResponse> {
 
     return { ipfsHash, pinSize, timeStamp, isDuplicate };
   } catch (error) {
-    console.error("Error uploading to IPFS:", error);
+    console.error('Error uploading to IPFS:', error);
     throw error;
   }
 }

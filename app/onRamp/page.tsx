@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import Header from "@components/header";
 import StatsSection from '@/components/onRamp/statsSection';
@@ -11,10 +11,19 @@ import { ethers } from "ethers";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { ONRAMP_CONTRACT_ADDRESS, ONRAMP_CONTRACT_ABI } from "@components/contractDetails";
 
-const WETH_ADDRESS = "0xb44cc5FB8CfEdE63ce1758CE0CDe0958A7702a16";
+import { ONRAMP_CONTRACT_ABI, ONRAMP_CONTRACT_ADDRESS } from '@components/contractDetails';
+import Header from '@components/header';
+import { ethers } from 'ethers';
+import { Check, File, FileText, Image, Upload, UploadCloud, X } from 'lucide-react';
+import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+
+import { generateCID, generatePiece } from '@/utils/dataPrep';
+
+import { uploadToIPFS } from './pinata';
+
+const WETH_ADDRESS = '0xb44cc5FB8CfEdE63ce1758CE0CDe0958A7702a16';
 
 export default function OnRamp() {
-
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -27,7 +36,7 @@ export default function OnRamp() {
   const PINATA_CONFIGS = JSON.stringify({
     cidVersion: 1,
   });
-  const PINATA_CLOUD_ROOT = "https://gateway.pinata.cloud/ipfs/";
+  const PINATA_CLOUD_ROOT = 'https://gateway.pinata.cloud/ipfs/';
 
   const { data: hash, isPending, writeContract } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
@@ -116,14 +125,14 @@ export default function OnRamp() {
   };
 
   const handleUpload = async () => {
-    setLoading(true)
+    setLoading(true);
     if (file) {
       //Upload data to IPFS buffer using pinata
       //Todo: this is not correct. Need to upload CAR for Filecoin aggregation
       const data = new FormData();
-      data.append("file", file);
-      data.append("pinataOptions", PINATA_CONFIGS);
-      console.log("Uploading")
+      data.append('file', file);
+      data.append('pinataOptions', PINATA_CONFIGS);
+      console.log('Uploading');
       const response = await uploadToIPFS(data);
       const fileIPFSHash = response?.ipfsHash;
       const ipfsURL = `${PINATA_CLOUD_ROOT}${fileIPFSHash}`;
@@ -151,19 +160,17 @@ export default function OnRamp() {
         writeContract({
           address: ONRAMP_CONTRACT_ADDRESS,
           abi: ONRAMP_CONTRACT_ABI,
-          functionName: "offerData",
+          functionName: 'offerData',
           args: [offer],
         });
-        setLoading(false)
+        setLoading(false);
       } catch (error) {
-        console.error("Error sending transaction:", error);
-        setLoading(false)
+        console.error('Error sending transaction:', error);
+        setLoading(false);
       }
-
     } else {
-      setError("No file is uploaded.");
+      setError('No file is uploaded.');
     }
-
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -200,7 +207,6 @@ export default function OnRamp() {
 
       <div className="pt-16 bg-blue-600 h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
           {/* Stats Section */}
           <StatsSection />
 
@@ -271,8 +277,11 @@ export default function OnRamp() {
                   <>
                     {!file ? (
                       <div
-                        className={`flex justify-center border-2 border-dashed rounded-xl h-96 transition-all ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-400'
-                          }`}
+                        className={`flex justify-center border-2 border-dashed rounded-xl h-96 transition-all ${
+                          isDragging
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-200 hover:border-blue-400'
+                        }`}
                         onDragEnter={handleDragEnter}
                         onDragLeave={handleDragLeave}
                         onDragOver={handleDragOver}
@@ -285,11 +294,10 @@ export default function OnRamp() {
                           </div>
                           <div className="text-center">
                             <p className="text-sm font-medium text-gray-700">
-                              <span className="text-blue-500">Click to upload</span> or drag and drop
+                              <span className="text-blue-500">Click to upload</span> or drag and
+                              drop
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              Supports all file types
-                            </p>
+                            <p className="text-xs text-gray-500 mt-1">Supports all file types</p>
                           </div>
                         </div>
                         <input
@@ -302,17 +310,13 @@ export default function OnRamp() {
                     ) : (
                       <div className="space-y-4">
                         <div className="flex items-start gap-4 p-4 rounded-lg bg-gray-50">
-                          <div className="flex-shrink-0">
-                            {getFileIcon()}
-                          </div>
+                          <div className="flex-shrink-0">{getFileIcon()}</div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-gray-900 truncate">
-                              {file.name}
-                            </h3>
+                            <h3 className="font-medium text-gray-900 truncate">{file.name}</h3>
                             <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
                               <span>{formatFileSize(file.size)}</span>
                               <span>•</span>
-                              <span>{file.type || "Unknown type"}</span>
+                              <span>{file.type || 'Unknown type'}</span>
                             </div>
                           </div>
                           <div>
@@ -382,8 +386,6 @@ export default function OnRamp() {
           </div>
         </div>
       </div>
-
     </>
-  )
-
+  );
 }
