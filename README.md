@@ -34,3 +34,4 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+<img width="1352" alt="image" src="https://github.com/user-attachments/assets/4a27b709-762b-43ab-a51d-e23cda13ec42" />
