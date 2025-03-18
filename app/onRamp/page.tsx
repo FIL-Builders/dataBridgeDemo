@@ -4,7 +4,7 @@ import Header from "@components/header";
 import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
 import { Upload, File, Image, FileText, Check, X, UploadCloud } from 'lucide-react';
 import { uploadToIPFS } from "./pinata";
-import { generateCID, generateCommp, generateCAR} from "@/utils/dataPrep";
+import { generateCID, generateCommp} from "@/utils/dataPrep";
 import { ethers } from "ethers";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { ONRAMP_CONTRACT_ADDRESS, ONRAMP_CONTRACT_ABI } from "@components/contractDetails"
@@ -130,27 +130,21 @@ export default function OnRamp() {
       //Preparing CID and piece info
       const cid = await generateCID(file);
       console.log("cid is ", cid.toString());
+
       const commP = await generateCommp(file);
       const pieceCid = commP.link.toString();
       console.log("piece CID is ", pieceCid);
 
-      const pieceCidBytes = ethers.hexlify(commP.link.bytes);
-      console.log("piece CID in bytes:", pieceCidBytes);
-
-      const pieceSize = commP.size;
-      console.log(`Padded Piece Size: ${commP.size} bytes`);
-
-      // await generateCAR(file);
       //Making offer struct
       const offer = {
-        commP: pieceCidBytes as `0x${string}`,
-        size: BigInt(pieceSize),
+        commP: ethers.hexlify(commP.link.bytes) as `0x${string}`,
+        size: BigInt(commP.size),
         cid: cid.toString(),
         location: ipfsURL,
         amount: BigInt(0),
         token: WETH_ADDRESS as `0x${string}`,
       };
-      console.log("offer is ", offer);
+      console.log("offer: ", offer);
 
       try {
         writeContract({
