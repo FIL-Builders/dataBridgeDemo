@@ -9,11 +9,19 @@ export const WalletConnect = () => {
     <ConnectButton.Custom>
       {({ account, chain, openChainModal, openConnectModal, authenticationStatus, mounted }) => {
         const ready = mounted && authenticationStatus !== 'loading';
+        console.log('mounted?', mounted);
+        console.log('authenticationStatus?', authenticationStatus);
+        console.log('ready?', ready);
         const connected =
           ready &&
           account &&
           chain &&
           (!authenticationStatus || authenticationStatus === 'authenticated');
+        
+        if (!mounted) {
+          // Prevent rendering until RainbowKit finishes mounting (avoids SSR issues)
+          return null;
+        }
         return (
           <div
             {...(!ready && {

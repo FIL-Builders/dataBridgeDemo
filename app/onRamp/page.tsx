@@ -4,7 +4,7 @@ import StatsSection from '@/components/onRamp/statsSection';
 import FileList from '@/components/onRamp/fileList';
 import Header from '@components/header';
 import { generateCID, generateCommp } from '@/utils/dataPrep';
-import { ONRAMP_CONTRACT_ABI, ONRAMP_CONTRACT_ADDRESS } from '@components/contractDetails';
+import { ONRAMP_CONTRACT_ABI, ONRAMP_CONTRACT_ADDRESS } from '@components/contracts/onrampContract';
 
 import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
 
@@ -254,12 +254,12 @@ export default function OnRamp() {
                             </div>
                           </div>
                         </div>
-                        <div>
+                        <div className="mt-4">
                           <button
                               onClick={() => window.location.reload()}
                               className="flex-1 py-2 px-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
                             >
-                              Go Back
+                              Upload More
                           </button>
                         </div>
                       </div>

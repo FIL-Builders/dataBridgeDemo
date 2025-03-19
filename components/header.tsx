@@ -4,7 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { NavbarWalletComponent } from './navbarWalletComponent';
-import { WalletConnect } from './walletConnect';
 
 const Header = () => {
   return (
