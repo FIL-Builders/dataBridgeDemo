@@ -22,6 +22,15 @@ git clone https://github.com/FIL-Builders/dataBridgeDemo.git
 cd dataBridgeDemo
 ```
 
+Configure Environment Variables
+
+Copy `.env.sample` to `.env`
+
+Set the JWT from your PINATA API INFO:
+```bash
+NEXT_PUBLIC_PINATA_JWT=
+```
+
 Install all dependencies:
 ```bash
 npm install

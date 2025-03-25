@@ -9,12 +9,12 @@ export type PinataResponse = {
 
 export async function uploadToIPFS(data: FormData): Promise<PinataResponse> {
   try {
-    const apiKey = process.env.NEXT_PUBLIC_PINATA_API_KEY;
-    console.log('PINATA API KEY:', apiKey);
+    const jwt = process.env.NEXT_PUBLIC_PINATA_JWT;
+    console.log('PINATA API KEY:', jwt);
     const res = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${jwt}`,
       },
       body: data,
     });
