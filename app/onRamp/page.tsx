@@ -5,25 +5,43 @@ import FileList from '@/components/onRamp/fileList';
 import Header from '@components/header';
 import { generateCID, generateCommp } from '@/utils/dataPrep';
 import { ONRAMP_CONTRACT_ABI, ONRAMP_CONTRACT_ADDRESS } from '@components/contracts/onrampContract';
-
-import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
-
+import React, { useState,useEffect, useRef, ChangeEvent, DragEvent } from 'react';
 import { ethers } from 'ethers';
-import { Check, File, FileText, Image, Upload, UploadCloud, X } from 'lucide-react';
-import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
-
+import { Check, File, FileText, Image, Upload, UploadCloud, X ,HandCoins} from 'lucide-react';
+import { useWaitForTransactionReceipt, useWriteContract, useReadContract, useAccount } from 'wagmi';
 import { uploadToIPFS } from './pinata';
+import { erc20Abi } from 'viem';
 
-const PAYMENT_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_PAYMENT_TOKEN_ADDRESS;
+const SUPPORTED_TOKENS = [
+  {
+    symbol: 'USDC',
+    address: '0x5425890298aed601595a70AB815c96711a31Bc65' as `0x${string}`,
+    decimals: 6,
+  },
+  {
+    symbol: 'DAI',
+    address: '0x6B175474E89094C44Da98b954EedeAC495271d0F' as `0x${string}`,
+    decimals: 18,
+  },
+  {
+    symbol: 'WETH',
+    address: '0xC02aaA39b223FE8D0a0e5C4F27eAD9083C756Cc2' as `0x${string}`,
+    decimals: 18,
+  },
+];
 
 export default function OnRamp() {
+  const { address } = useAccount();
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [textContent, setTextContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-
+  const [selectedTokenSymbol, setSelectedTokenSymbol] = useState('USDC');
+  const [tokenAmount, setTokenAmount] = useState('');
+  const [amountInUnits, setAmountInUnits] = useState<bigint | null>(null);
+  const selectedToken = SUPPORTED_TOKENS.find((t) => t.symbol === selectedTokenSymbol)!;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const PINATA_CONFIGS = JSON.stringify({
@@ -35,6 +53,53 @@ export default function OnRamp() {
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
   });
+
+  useEffect(() => {
+    try {
+      if (tokenAmount) {
+        const parsed = ethers.parseUnits(tokenAmount, selectedToken.decimals);
+        console.log('Parsed amount:', parsed.toString());
+        setAmountInUnits(parsed);
+      } else {
+        setAmountInUnits(null);
+      }
+    } catch (e) {
+      console.error('Failed to parse amount', e);
+      setAmountInUnits(null);
+    }
+  }, [tokenAmount, selectedToken]);
+
+  // Read allowance using new hook
+  const { data: allowanceData} = useReadContract({
+    address: selectedToken.address,
+    abi: erc20Abi,
+    functionName: 'allowance',
+    args: [address as `0x${string}`, ONRAMP_CONTRACT_ADDRESS],
+    query: { enabled: !!address },
+  });
+
+  console.log('Actual allowance before offerData:', allowanceData?.toString());
+  console.log('Trying to transfer:', amountInUnits?.toString());
+  
+  const allowed =
+    allowanceData !== undefined &&
+    amountInUnits !== null &&
+    BigInt(allowanceData as bigint) >= amountInUnits;
+
+  // Prepare and send approval
+  const {
+    writeContract: sendApproval,
+    data: approveTxData,
+    error: approveError,
+    isPending: approving,
+    isSuccess: approved,
+  } = useWriteContract();
+  
+  useEffect(() => {
+    if (approveError) {
+      console.error('Approval error:', approveError);
+    }
+  }, [approveError]);
 
   const handleFileChange = (selectedFile: File) => {
     // Reset states
@@ -108,6 +173,8 @@ export default function OnRamp() {
 
   const handleRemoveFile = () => {
     setFile(null);
+    setSelectedTokenSymbol('');
+    setTokenAmount('');
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
@@ -121,7 +188,6 @@ export default function OnRamp() {
     setLoading(true);
     if (file) {
       //Upload data to IPFS buffer using pinata
-      //Todo: this is not correct. Need to upload CAR for Filecoin aggregation
       const data = new FormData();
       data.append('file', file);
       data.append('pinataOptions', PINATA_CONFIGS);
@@ -137,6 +203,8 @@ export default function OnRamp() {
       const commP = await generateCommp(file);
       const pieceCid = commP.link.toString();
       console.log("piece CID is ", pieceCid);
+      console.log("payment Token is ", selectedToken.address);
+      console.log("payment amount is ", amountInUnits);
 
       //Making offer struct
       const offer = {
@@ -144,8 +212,8 @@ export default function OnRamp() {
         size: BigInt(commP.size),
         cid: cid.toString(),
         location: ipfsURL,
-        amount: BigInt(0),
-        token: PAYMENT_TOKEN_ADDRESS as `0x${string}`,
+        amount: amountInUnits,
+        token: selectedToken.address,
       };
       console.log("offer: ", offer);
 
@@ -352,21 +420,77 @@ export default function OnRamp() {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex gap-3">
-                          <button
-                            onClick={handleRemoveFile}
-                            className="flex-1 py-2 px-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
-                          >
-                            Reset
-                          </button>
-                          <button
-                            onClick={handleUpload}
-                            className="flex-1 py-2 px-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                          >
-                            <Check className="w-4 h-4" />
-                            Upload File
-                          </button>
+                        <div className="flex flex-col gap-4">
+                          <div className="flex gap-3">
+                            <select
+                              value={selectedTokenSymbol}
+                              onChange={(e) => {
+                                setSelectedTokenSymbol(e.target.value);
+                                setTokenAmount('');
+                                setAmountInUnits(null);
+                              }}
+                              className="flex-1 py-2 px-3 border border-gray-300 text-gray-700 rounded-lg text-sm"
+                            >
+                              {SUPPORTED_TOKENS.map((token) => (
+                                <option key={token.symbol} value={token.symbol}>
+                                  {token.symbol}
+                                </option>
+                              ))}
+                            </select>
+
+                            <input
+                              type="number"
+                              placeholder="Amount"
+                              className="flex-1 py-2 px-3 border border-gray-300 text-gray-700 rounded-lg text-sm"
+                              value={tokenAmount}
+                              onChange={(e) => setTokenAmount(e.target.value)}
+                            />
+                            <button
+                              onClick={() => {
+                                if (!amountInUnits) {
+                                  console.warn('Amount is not set.');
+                                  return;
+                                }
+                              
+                                sendApproval({
+                                  address: selectedToken.address,
+                                  abi: erc20Abi,
+                                  functionName: 'approve',
+                                  args: [ONRAMP_CONTRACT_ADDRESS, amountInUnits],
+                                });
+                              }}
+                              disabled={!sendApproval || approved || approving || !amountInUnits}
+                              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 ${
+                                approved
+                                  ? 'bg-gray-400 text-white cursor-not-allowed'
+                                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                              }`}
+                            >
+                              <HandCoins className="w-4 h-4" />
+                              {approving ? 'Approving...' : approved ? 'Approved' : 'Approve Token'}
+                            </button>
+                          </div>
+
+                          {/* Buttons */}
+                          <div className="flex gap-3">
+                            <button
+                              onClick={handleRemoveFile}
+                              className="flex-1 py-2 px-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                            >
+                              Reset
+                            </button>
+                            <button
+                              disabled={!approved}
+                              onClick={handleUpload}
+                              className="flex-1 py-2 px-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                            >
+                              <Check className="w-4 h-4" />
+                              Upload File
+                            </button>
+                          </div>
                         </div>
+
+
                       </div>
                     )}
                   </>

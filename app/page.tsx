@@ -13,7 +13,7 @@ export default function Home() {
           style={{ maxWidth: '1200px' }}
         >
           <h1 className="inline-block max-w-2xl lg:max-w-4xl  w-auto relative text-5xl md:text-6xl lg:text-7xl tracking-tighter mb-10 font-bold">
-            Cross-Chain Data Storage on Filecoin{' '}
+            Cross-Chain Data Storage on Avalanche{' '}
           </h1>
           <p className="text-xl mb-5">Effortlessly bridge your data to Filecoin from Avalanche</p>
           <WalletConnect />
